@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1 class="text-center">뷰 테스트</h1>
+  {% for article in articles %}
+    <a href="{% url 'articles:detail' article.pk %}">{{ article.title }}</a>
+    <hr>
+  {% endfor %}
+{% endblock content %}
+
+{% block java %}
+{% endblock java %}
