@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<input type="text" v-model="comment" @keydown.enter="comment_create">
+<input type="text" v-model="content" @keydown.enter="comment_create">
 <button @click="comment_create">뷰버튼</button>
 
 <h1>{{ article.pk }}번 글의 Detail </h1>
@@ -20,9 +20,22 @@
 <hr>
 {% endfor %}
 
+{% comment %} <br>
+<div v-for="com_json in comments" :key="com_json.pk">
+  <b>[[ com_json.content ]]</b>
+  <p>[[ com_json.created_at ]]</p>
+  <form action="{% url 'articles:comment_delete' article.pk  %}" method="POST">
+    {% csrf_token %}
+    <input type="submit" value="삭제">
+  </form>
+  <hr>
+</div>
+<br> {% endcomment %}
+
+
 <form action="{% url 'articles:comment' article.pk %}" method="POST">
   {% csrf_token %}
-  {{ form.as_p }}
+  {% comment %} <input type="text" name="content" id="content" required> {% endcomment %}
   <input type="submit" value="제출">
 </form>
 
@@ -34,22 +47,17 @@
     delimiters: ["[[", "]]"],
     el: '#app',
     data: {
-      comment: ''
+      content: '',
+      comments: {{comments_json|safe}}
     },
     methods: {
-      comment_create: function () {
-        // const articleId = event.target.dataset.id        
-        // axios.defaults.headers.common['X-Requested-With']= 'XMLHttpRequest'
-        // axios.defaults.xsrfCookieName = 'csrftoken'
-        // axios.defaults.xsrfHeaderName = 'X-CSRFToken'
-        // axios.post(`detail/${articleId}/comment/`)
-        //  .then(response => {
-        //    console.log(response)
-        //  })
-
-
-        this.comment = ''
-        console.log({{ article }})
+      comment_create: function (e) {
+        console.log('눌림')
+        // const articleId = {{ article.pk }}
+        axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
+        axios.defaults.xsrfCookieName = 'csrftoken'
+        axios.defaults.xsrfHeaderName = 'X-CSRFToken'
+        axios.post('comment/', {content: this.content })
       }
     }
   })
