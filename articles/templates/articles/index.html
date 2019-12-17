@@ -2,11 +2,34 @@
 
 {% block content %}
   <h1 class="text-center">뷰 테스트</h1>
-  {% for article in articles %}
+  <a href="{% url 'articles:create_article' %}">글생성</a>
+  <hr>
+ {% comment %} {% for article in articles %}
     <a href="{% url 'articles:detail' article.pk %}">{{ article.title }}</a>
+    <a href="{% url 'articles:update_article' article.pk %}">[글 수정]</a>
     <hr>
-  {% endfor %}
+  {% endfor %}  {% endcomment %}
+  <div v-for="article in vue_articles">
+    <a :href="url" @mouseover="mouseIn(article.id)">[[ article.title ]]</a>
+    <hr>
+  </div>
+  
 {% endblock content %}
 
-{% block java %}
+{% block java %} 
+  <script>
+    const app = new Vue({
+      el: '#app',
+      delimiters: ["[[", "]]"],
+      data: {      
+        vue_articles: {{ vue_articles|safe }},
+        url: 'test',
+      },
+      methods: {
+        mouseIn: function(e) {
+          this.url = `{% url 'articles:detail' 123456 %}`.replace('123456', e)
+        }
+      }
+    })
+  </script>
 {% endblock java %}

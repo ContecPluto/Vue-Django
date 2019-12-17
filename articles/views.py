@@ -2,17 +2,18 @@ from django.views.decorators.http import require_POST
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.core.serializers.json import DjangoJSONEncoder
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from .forms import ArticleForm, CommentForm
 from .models import Article, Comment
-from .serializers import CommentSerializer
+from .serializers import CommentSerializer, ArticleSerializer
 import json
-# from django.core import serializers
-# from rest_framework import serializers
 
 # Create your views here.
 def index(request):
     articles = Article.objects.all()
-    context = {'articles':articles, }
+    vue_articles = json.dumps(ArticleSerializer(articles, many=True).data)
+    context = {'articles':articles, 'vue_articles':vue_articles,}
     return render(request, 'articles/index.html', context)
 
 def create_article(request):
@@ -28,35 +29,45 @@ def create_article(request):
 
 def detail(request, article_pk):
     article = get_object_or_404(Article, pk=article_pk)
-    form = CommentForm()
-    comments = article.comment_set.all()
-    comments_json = CommentSerializer(comments, many=True).data
-    comments_json = json.dumps(comments_json)
-    context = {'article':article, 'form':form, 'comments':comments, 'comments_json':comments_json}
+    comments_json = json.dumps(CommentSerializer(article.comment_set.all(), many=True).data)
+    context = {'article':article, 'comments_json':comments_json}
     return render(request, 'articles/detail.html', context)
 
-@require_POST
+def update_article(request, article_pk):
+    article = get_object_or_404(Article, pk=article_pk)
+    if request.method == 'POST':
+        form = ArticleForm(request.POST, instance=article)
+        if form.is_valid():            
+            article = form.save()
+            return redirect(article)
+    else:
+        form = ArticleForm(instance=article)        
+    context = {'form':form,}
+    return render(request, 'articles/form.html', context)
+
+@api_view(['POST'])
 def comment_create(request, article_pk):
-    print(request.POST)
-    # if request.is_ajax():
-    form = CommentForm(request.POST)
-    if form.is_valid:
-        comment = form.save(commit=False)
-        comment.article_id = article_pk
-        comment.save()
-        # return redirect('articles:detail', article_pk)
-    # comments = Comment.objects.all()
-    # context  = {'commetns':comments}
-    return Response(meassage="sucess")
-    # else:
-    #     return HttpResponseBadRequest(404)
+    if request.is_ajax():
+        form = CommentForm(request.data)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.article_id = article_pk
+            comment.save()
+            comment = json.dumps(CommentSerializer(comment).data)
+            return JsonResponse(comment, status=201, safe=False)
+        else:
+            return JsonResponse({'message': 'fail'}, status=202)
+    else:
+        return HttpResponseBadRequest(401)
         
 
         
         
 @require_POST
-def comment_delete(request, article_pk, comment_pk):
-    comment = get_object_or_404(Comment, pk=comment_pk)
-    comment.delete()
-    return redirect('articles:detail', article_pk)
+def comment_delete(request, comment_pk):
+    if request.is_ajax():
+        comment = get_object_or_404(Comment, pk=comment_pk)
+        comment.delete()
+        return JsonResponse({"message": "삭제되었습니다."}, status=204)
+    return HttpResponseBadRequest(401)
     

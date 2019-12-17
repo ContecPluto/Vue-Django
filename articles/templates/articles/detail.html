@@ -1,8 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<input type="text" v-model="content" @keydown.enter="comment_create">
-<button @click="comment_create">뷰버튼</button>
+
 
 <h1>{{ article.pk }}번 글의 Detail </h1>
 <b> 제목 : {{ article.title }} </b>
@@ -10,34 +9,19 @@
 <p> 작성일시 : {{ article.created_at }} </p>
 <p> 수정일시 : {{ article.updated_at }} </p>
 <hr>
-{% for comment in comments %}
-<b>{{ comment.content }}</b>
-<p>{{ comment.created_at }}</p>
-<form action="{% url 'articles:comment_delete' article.pk comment.pk %}" method="POST">
-  {% csrf_token %}
-  <input type="submit" value="삭제">
-</form>
-<hr>
-{% endfor %}
 
-{% comment %} <br>
+<br>
 <div v-for="com_json in comments" :key="com_json.pk">
   <b>[[ com_json.content ]]</b>
   <p>[[ com_json.created_at ]]</p>
-  <form action="{% url 'articles:comment_delete' article.pk  %}" method="POST">
-    {% csrf_token %}
-    <input type="submit" value="삭제">
-  </form>
+  <button @click="comment_delete(com_json.id)">삭제</button>
   <hr>
 </div>
-<br> {% endcomment %}
+<br>
 
 
-<form action="{% url 'articles:comment' article.pk %}" method="POST">
-  {% csrf_token %}
-  {% comment %} <input type="text" name="content" id="content" required> {% endcomment %}
-  <input type="submit" value="제출">
-</form>
+<input type="text" v-model="content" @keydown.enter="comment_create">
+<button @click="comment_create">뷰버튼</button>
 
 {% endblock content %}
 
@@ -48,16 +32,32 @@
     el: '#app',
     data: {
       content: '',
-      comments: {{comments_json|safe}}
+      comments: {{ comments_json|safe }}
     },
     methods: {
       comment_create: function (e) {
-        console.log('눌림')
-        // const articleId = {{ article.pk }}
+        var postData = {content: this.content,}
         axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
         axios.defaults.xsrfCookieName = 'csrftoken'
         axios.defaults.xsrfHeaderName = 'X-CSRFToken'
-        axios.post('comment/', {content: this.content })
+        axios.post(`{% url 'articles:comment' article.pk %}`, postData)
+          .then(response => {
+            this.content=''
+            if (response.data.length != undefined ) {              
+              this.comments.unshift(JSON.parse(response.data))
+            }
+          })        
+      },
+      
+      comment_delete: function (e) {
+        axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
+        axios.defaults.xsrfCookieName = 'csrftoken'
+        axios.defaults.xsrfHeaderName = 'X-CSRFToken'
+        axios.post(`{% url 'articles:comment_delete' 123456 %}`.replace('123456', e))
+          .then(response => {
+            this.comments = this.comments.filter(content => content.id !== e)
+          })
+        
       }
     }
   })
