@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
+{% load make_link %}
 
 {% block content %}
 
 
 <h1>{{ article.pk }}번 글의 Detail </h1>
 <b> 제목 : {{ article.title }} </b>
-<p> 내용 : {{ article.content }} </p>
+<p> 내용 : {{ article|hashtag_link|safe }}</p>
 <p> 작성일시 : {{ article.created_at }} </p>
 <p> 수정일시 : {{ article.updated_at }} </p>
 <hr>

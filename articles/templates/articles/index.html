@@ -1,16 +1,17 @@
 {% extends 'base.html' %}
 
 {% block content %}
+  
   <h1 class="text-center">뷰 테스트</h1>
+  <input @input="onInput" @keydown.enter="article_filter" type="text" v-model="search"><br>
+  <div v-for="search_item in search_list" :id="'search'+search_item.id" :class="search_class" v-on:mouseover="changebgcolor" v-on:mouseout="originalcolor" @click="click_search_list(search_item.content)">[[ search_item.content ]]</div>
   <a href="{% url 'articles:create_article' %}">글생성</a>
   <hr>
- {% comment %} {% for article in articles %}
-    <a href="{% url 'articles:detail' article.pk %}">{{ article.title }}</a>
-    <a href="{% url 'articles:update_article' article.pk %}">[글 수정]</a>
-    <hr>
-  {% endfor %}  {% endcomment %}
+
+  
   <div v-for="article in vue_articles">
-    <a :href="url" @mouseover="mouseIn(article.id)">[[ article.title ]]</a>
+    <a :href="url" @click="mouseIn(article.id)">[[ article.title ]]</a><br>
+    <a href="/articles/{ hashtag.pk }/hashtag/" v-for="hashtag in article.hashtags">[[ hashtag|capitalize ]]</a>
     <hr>
   </div>
   
@@ -23,13 +24,43 @@
       delimiters: ["[[", "]]"],
       data: {      
         vue_articles: {{ vue_articles|safe }},
-        url: 'test',
+        url: '',
+        search: '',
+        search_list: [],
+        search_class: 'alert alert-light'
       },
       methods: {
         mouseIn: function(e) {
           this.url = `{% url 'articles:detail' 123456 %}`.replace('123456', e)
+        },
+        onInput: function(e) {
+          if (!this.search) return
+          this.search_list={{ ori_hashtags|safe }}.filter(search_hashtag => search_hashtag.content.startsWith(this.search))
+        },
+        article_filter: function(letter) {  
+          if (this.search_list.length !== 1) return this.search = '', this.search_list = []
+          this.vue_articles= {{ vue_articles|safe }}.filter(articles => articles.hashtags.some(hashtag => this.search_list[0].id))
+          this.search = ''
+          this.search_list = []
+        },
+        click_search_list: function(click_search) {
+          this.search = click_search
+          this.search_list={{ ori_hashtags|safe }}.filter(search_hashtag => search_hashtag.content.startsWith(this.search))
+          this.article_filter()
+        },
+        changebgcolor: function() {
+          this.search_class = 'alert alert-primary'
+        },
+        originalcolor: function() {
+          this.search_class = 'alert alert-light'
         }
-      }
+      },
+      filters: {
+        capitalize: id => {
+          if (id.length === 0) return
+          return {{ ori_hashtags|safe }}.filter(item => item.id != id)[0].content
+          }
+        }
     })
   </script>
 {% endblock java %}

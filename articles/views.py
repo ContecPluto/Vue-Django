@@ -5,23 +5,28 @@ from django.core.serializers.json import DjangoJSONEncoder
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .forms import ArticleForm, CommentForm
-from .models import Article, Comment
-from .serializers import CommentSerializer, ArticleSerializer
+from .models import Article, Comment, Hashtag
+from .serializers import CommentSerializer, ArticleSerializer, HashtagSerializer
 import json
 
 # Create your views here.
 def index(request):
     articles = Article.objects.all()
+    ori_hashtags = json.dumps(HashtagSerializer(Hashtag.objects.all(), many=True).data)
     vue_articles = json.dumps(ArticleSerializer(articles, many=True).data)
-    context = {'articles':articles, 'vue_articles':vue_articles,}
+    context = {'articles':articles, 'vue_articles':vue_articles, 'ori_hashtags':ori_hashtags,}
     return render(request, 'articles/index.html', context)
 
 def create_article(request):
     if request.method == 'POST':
         form = ArticleForm(request.POST)
         if form.is_valid:
-            form.save()
-            return redirect('articles:index')
+            article = form.save()
+            for word in article.content.split(): 
+                if word.startswith('#'): 
+                    hashtag, created = Hashtag.objects.get_or_create(content=word)
+                    article.hashtags.add(hashtag) 
+            return redirect(article)
     else:
         form = ArticleForm()
     context = {'form':form, }
@@ -60,9 +65,6 @@ def comment_create(request, article_pk):
     else:
         return HttpResponseBadRequest(401)
         
-
-        
-        
 @require_POST
 def comment_delete(request, comment_pk):
     if request.is_ajax():
@@ -71,3 +73,8 @@ def comment_delete(request, comment_pk):
         return JsonResponse({"message": "삭제되었습니다."}, status=204)
     return HttpResponseBadRequest(401)
     
+def hashtag(request, hash_pk):
+    hashtag = get_object_or_404(Hashtag, pk=hash_pk)
+    articles = hashtag.article_set.order_by('-pk')
+    context = {'hashtag':hashtag, 'articles':articles,}
+    return render(request, 'articles/hashtag.html', context)
