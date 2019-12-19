@@ -10,7 +10,7 @@
   
   <div v-for="article in vue_articles">
     <a :href="url" @click="mouseIn(article.id)">[[ article.title ]]</a><br>
-    <a href="/articles/{ hashtag.pk }/hashtag/" v-for="hashtag in article.hashtags">[[ hashtag|capitalize ]]</a>
+    <a style="cursor:pointer" class="text-primary" @click="hashtag_search(hashtag)" v-for="hashtag in article.hashtags">[[ hashtag|capitalize ]]</a>
     <hr>
   </div>
   
@@ -22,32 +22,41 @@
       el: '#app',
       delimiters: ["[[", "]]"],
       data: {      
-        vue_articles: articleStorage.fetch(),
+        vue_articles: [],
         url: '',
         search: '',
         search_list: [],
       },
+      mounted: function () {
+        this.vue_articles = articleStorage.fetch()
+        if (backStorage.fetch() === true) {
+          backStorage.save(false)
+          this.search_list = []
+          this.article_filter()
+          localStorage.removeItem(STORAGE_KEY3)
+        }
+      },
       methods: {
+        hashtag_search: function(seha) {
+          searchStorage.save(hashtagStorage.fetch().filter(item => item.id != seha)[0])
+          this.article_filter()
+        },
         mouseIn: function(e) {
           this.url = `{% url 'articles:detail' 123456 %}`.replace('123456', e)
         },        
         article_filter: function(letter) {  
-        
-          if (searchStorage.fetch().content === '#') {
-            this.search = ''
-            this.search_list = []
+          if (searchStorage.fetch() === '#') {
             this.vue_articles = articleStorage.fetch()
+            localStorage.removeItem(STORAGE_KEY3)
+            // this.vue_articles = articleStorage.fetch()
             return
           }
-          else if (this.search_list.length !== 1) {
-            this.search = ''
-            this.search_list = []
-            return
-          }
-          this.vue_articles= articleStorage.fetch().filter(articles => articles.hashtags.some(hashtag => this.search_list[0].id))
-          this.search = ''
+          this.vue_articles= articleStorage.fetch().filter(articles => articles.hashtags.some(hashtag => searchStorage.fetch().id))
+          console.log(this.vue_articles)
+          localStorage.removeItem(STORAGE_KEY3)
           this.search_list = []
         },
+        
       },
       filters: {
         capitalize: id => {
@@ -55,6 +64,7 @@
           return hashtagStorage.fetch().filter(item => item.id != id)[0].content
           }
       },
+
     })
   </script>
 {% endblock java %}

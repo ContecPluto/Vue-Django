@@ -15,7 +15,7 @@
 <body>
   <div id="nav" class="container">
   <div class="col-3">
-    <input width="50px" @input="onInput" @keydown.enter="click_search_list" type="text" v-model="search">
+    <input width="50px" @input="onInput" @keydown.enter="click_search_list(search)" type="text" v-model="search">
     <input class="mb-2" type="button" value="검색">
     <br>
     <div class="border" v-if="search_list.length">
@@ -25,8 +25,12 @@
         v-on:mouseover="changebgcolor(search_item)"
         v-on:mouseout="originalcolor(search_item)"
         @click="click_search_list(search_item)"
-        style="cursor:pointer">
-        [[ search_item.content ]]
+        style="cursor:pointer">          
+          {% if request.resolver_match.url_name != 'index'  %}
+            <a href="{% url 'articles:index' %}" @click="back_hash(search_item)">[[ search_item.content ]]</a>
+          {% else %}
+            [[ search_item.content ]]
+          {% endif %}
       </div>
     </div>
   </div>    
@@ -44,9 +48,18 @@
     const STORAGE_KEY = 'vue-article'
     const STORAGE_KEY2 = 'vue-hashtag'
     const STORAGE_KEY3 = 'vue-search'
+    const STORAGE_KEY4 = 'back'
+    const backStorage = {
+      fetch: function () {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY4))
+      },
+      save: function (back) {
+        localStorage.setItem(STORAGE_KEY4, back)
+      }
+    }
     const searchStorage = {
       fetch: function () {
-        return localStorage.getItem(STORAGE_KEY3)
+        return JSON.parse(localStorage.getItem(STORAGE_KEY3) || '[]')
       },
       save: function (search_list) {
         localStorage.setItem(STORAGE_KEY3, JSON.stringify(search_list))
@@ -77,30 +90,33 @@
         hashtags: [],      
       },
       mounted: function () {
-        localStorage.removeItem(STORAGE_KEY3)
         axios.get('{% url "articles:hashtag_list" %}')
           .then(res =>{
             hashtagStorage.save(res.data.hashtags)
             articleStorage.save(res.data.articles)
           })
+        if (backStorage.fetch() === true) {
+          return
+        }
         this.hashtags = hashtagStorage.fetch()
-        this.vue_articles = articleStorage.fetch()
+        localStorage.removeItem(STORAGE_KEY3)
       },
       methods:{
+        back_hash: function (seha) {
+          backStorage.save(true)
+          searchStorage.save(hashtagStorage.fetch().filter(item => item.id != seha)[0])
+        },
         onInput: function(e) {
           if (!this.search) return this.search_list = []
           this.search_list= hashtagStorage.fetch().filter(search_hashtag => search_hashtag.content.startsWith(this.search))
         },
         click_search_list: function(click_search) {
-          searchStorage.save(click_search)
-          console.log(searchStorage.fetch())
-           
-          this.search = click_search.content
-          this.search_list=hashtagStorage.fetch().filter(search_hashtag => search_hashtag.content.startsWith(this.search))
+          searchStorage.save(click_search)           
+          this.search = ''
+          this.search_list= []
           if ('{{ request.resolver_match.url_name }}' === 'index') {
             app.article_filter()
-            console.log(app.vue_articles)
-            console.log(11)
+            this.search_list=[]
           }          
         },
         changebgcolor: function(SI) {

@@ -5,6 +5,7 @@
 
 
 <h1>{{ article.pk }}번 글의 Detail </h1>
+<a @click="back_method" href="{% url 'articles:index' %}">back</a><br>
 <b> 제목 : {{ article.title }} </b>
 <p> 내용 : {{ article|hashtag_link|safe }}</p>
 <p> 작성일시 : {{ article.created_at }} </p>
@@ -36,7 +37,13 @@
       comments: {{ comments_json|safe }}
     },
     methods: {
+      back_method: function (seha) {
+        backStorage.save(true)
+        searchStorage.save(hashtagStorage.fetch().filter(item => item.id != seha)[0])
+        console.log(hashtagStorage.fetch().filter(item => console.log(item)))
+      },
       comment_create: function (e) {
+        console.log(e)
         var postData = {content: this.content,}
         axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
         axios.defaults.xsrfCookieName = 'csrftoken'
@@ -49,7 +56,6 @@
             }
           })        
       },
-      
       comment_delete: function (e) {
         axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
         axios.defaults.xsrfCookieName = 'csrftoken'
@@ -58,7 +64,6 @@
           .then(response => {
             this.comments = this.comments.filter(content => content.id !== e)
           })
-        
       }
     }
   })
