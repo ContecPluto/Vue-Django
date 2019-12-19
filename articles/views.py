@@ -11,11 +11,11 @@ import json
 
 # Create your views here.
 def index(request):
-    articles = Article.objects.all()
-    ori_hashtags = json.dumps(HashtagSerializer(Hashtag.objects.all(), many=True).data)
-    vue_articles = json.dumps(ArticleSerializer(articles, many=True).data)
-    context = {'articles':articles, 'vue_articles':vue_articles, 'ori_hashtags':ori_hashtags,}
-    return render(request, 'articles/index.html', context)
+    # articles = Article.objects.all()
+    # ori_hashtags = json.dumps(HashtagSerializer(Hashtag.objects.all(), many=True).data)
+    # vue_articles = json.dumps(ArticleSerializer(articles, many=True).data)
+    # context = {'articles':articles,}
+    return render(request, 'articles/index.html')
 
 def create_article(request):
     if request.method == 'POST':
@@ -78,3 +78,9 @@ def hashtag(request, hash_pk):
     articles = hashtag.article_set.order_by('-pk')
     context = {'hashtag':hashtag, 'articles':articles,}
     return render(request, 'articles/hashtag.html', context)
+
+def hashtag_list(request):
+    hashtags = json.dumps(HashtagSerializer(Hashtag.objects.all(), many=True).data)
+    articles = json.dumps(ArticleSerializer(Article.objects.all(), many=True).data)
+    context = {'hashtags':hashtags, 'articles':articles,}
+    return JsonResponse(context, status=200)

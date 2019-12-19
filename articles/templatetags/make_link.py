@@ -8,5 +8,5 @@ def hashtag_link(word):
     hashtags = word.hashtags.all()
 
     for hashtag in hashtags:
-        content = content.replace(hashtag.content+' ', f'<a href="/articles/{ hashtag.pk }/hashtag/">{ hashtag.content }</a> ') #마지막 공백 주의!!
+        content = content.replace(hashtag.content+' ', f'<a href="/articles/{ hashtag.pk }/hashtag/">{ hashtag.content }</a> ')
     return content

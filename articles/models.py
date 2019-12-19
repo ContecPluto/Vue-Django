@@ -4,6 +4,7 @@ from django.urls import reverse
 # Create your models here.
 class Hashtag(models.Model):
     content = models.TextField(unique=True)
+    detect = models.CharField(max_length=500, default="alert alert-light")
     def __str__(self):
         return self.content
 
