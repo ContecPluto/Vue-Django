@@ -1,13 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  
   <h1 class="text-center">뷰 테스트</h1>
-
   <a href="{% url 'articles:create_article' %}">글생성</a>
   <hr>
-
-  
   <div v-for="article in vue_articles">
     <a :href="url" @click="mouseIn(article.id)">[[ article.title ]]</a><br>
     <a style="cursor:pointer" class="text-primary" @click="hashtag_search(hashtag)" v-for="hashtag in article.hashtags">[[ hashtag|capitalize ]]</a>
@@ -22,7 +18,7 @@
       el: '#app',
       delimiters: ["[[", "]]"],
       data: {      
-        vue_articles: [],
+        vue_articles: {{ vue_articles|safe }},
         url: '',
         search: '',
         search_list: [],
@@ -33,8 +29,8 @@
           backStorage.save(false)
           this.search_list = []
           this.article_filter()
-          localStorage.removeItem(STORAGE_KEY3)
         }
+        localStorage.removeItem(STORAGE_KEY3)
       },
       methods: {
         hashtag_search: function(seha) {
@@ -44,15 +40,13 @@
         mouseIn: function(e) {
           this.url = `{% url 'articles:detail' 123456 %}`.replace('123456', e)
         },        
-        article_filter: function(letter) {  
+        article_filter: function() {  
           if (searchStorage.fetch() === '#') {
             this.vue_articles = articleStorage.fetch()
             localStorage.removeItem(STORAGE_KEY3)
-            // this.vue_articles = articleStorage.fetch()
             return
           }
           this.vue_articles= articleStorage.fetch().filter(articles => articles.hashtags.some(hashtag => searchStorage.fetch().id))
-          console.log(this.vue_articles)
           localStorage.removeItem(STORAGE_KEY3)
           this.search_list = []
         },

@@ -40,10 +40,8 @@
       back_method: function (seha) {
         backStorage.save(true)
         searchStorage.save(hashtagStorage.fetch().filter(item => item.id != seha)[0])
-        console.log(hashtagStorage.fetch().filter(item => console.log(item)))
       },
       comment_create: function (e) {
-        console.log(e)
         var postData = {content: this.content,}
         axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
         axios.defaults.xsrfCookieName = 'csrftoken'

@@ -27,7 +27,7 @@
         @click="click_search_list(search_item)"
         style="cursor:pointer">          
           {% if request.resolver_match.url_name != 'index'  %}
-            <a href="{% url 'articles:index' %}" @click="back_hash(search_item)">[[ search_item.content ]]</a>
+            <a class="w-100 h-100" href="{% url 'articles:index' %}" @click="back_hash(search_item)">[[ search_item.content ]]</a>
           {% else %}
             [[ search_item.content ]]
           {% endif %}
@@ -81,6 +81,7 @@
         localStorage.setItem(STORAGE_KEY2, hashtag)
       }
     }
+    
     const baseApp = new Vue({
       delimiters: ["[[", "]]"],
       el: '#nav',

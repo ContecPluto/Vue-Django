@@ -11,11 +11,9 @@ import json
 
 # Create your views here.
 def index(request):
-    # articles = Article.objects.all()
-    # ori_hashtags = json.dumps(HashtagSerializer(Hashtag.objects.all(), many=True).data)
-    # vue_articles = json.dumps(ArticleSerializer(articles, many=True).data)
-    # context = {'articles':articles,}
-    return render(request, 'articles/index.html')
+    vue_articles = json.dumps(ArticleSerializer(Article.objects.all(), many=True).data)
+    context = {'vue_articles':vue_articles,}
+    return render(request, 'articles/index.html', context)
 
 def create_article(request):
     if request.method == 'POST':
@@ -72,12 +70,6 @@ def comment_delete(request, comment_pk):
         comment.delete()
         return JsonResponse({"message": "삭제되었습니다."}, status=204)
     return HttpResponseBadRequest(401)
-    
-def hashtag(request, hash_pk):
-    hashtag = get_object_or_404(Hashtag, pk=hash_pk)
-    articles = hashtag.article_set.order_by('-pk')
-    context = {'hashtag':hashtag, 'articles':articles,}
-    return render(request, 'articles/hashtag.html', context)
 
 def hashtag_list(request):
     hashtags = json.dumps(HashtagSerializer(Hashtag.objects.all(), many=True).data)
